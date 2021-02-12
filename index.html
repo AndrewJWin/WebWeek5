@@ -1,0 +1,114 @@
+<html>
+    <meta charset="UTF-8">    
+    <head>
+        <title>Github Repository Analyzer</title>
+    </head>
+
+    <body style="font-family: Arial, Helvetica, sans-serif;">
+
+        <div>
+            <h1>GitHub Repository Programming Language Analysis</h1>
+
+            <label for="github-username">Enter GitHub Username</label>
+            <input id="github-username">
+            <button id="analyze">Analyze</button>
+        </div>
+        
+        <!-- Github Profile data, avatar username and profile link. -->
+        <div>
+            <img id = "githubAvatar" width="225" height="225" hidden=true; style="border-radius: 50%; padding-top: 15px;">
+            <h1 id = "githubUsername" style="text-align: justify; margin-bottom: 5px;"></h1>
+            <a id = "githubLink"; href="https://github.com"; hidden=true;><img width="52" height="52" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png";></a>
+        </div>
+
+        <!-- List of Repository languages and the number of Repos. -->
+        <div id = "LanguageDiv" hidden=true;>
+            <h2>Languages:</h2>
+            <ul id = "LanguageList">
+            </ul>
+        </div>
+            
+        <!-- Github Repository and Profile data fetching script. -->
+
+        <script>
+
+            // Let's fetch the Analyze button and Username input elements and set a variable for them.
+
+            let analyzeButton = document.getElementById('analyze');
+            let usernameInput = document.getElementById('github-username');
+
+            // Watch for a click event, and once that's engaged - it's go time.
+            analyzeButton.addEventListener('click', function() {
+
+                // First we ensure there is no data currently in view from a possible previous search.
+                document.getElementById("LanguageList").innerHTML = "";
+                
+                // The following chunk takes the value of the input and sets the url with the username.
+                let username = usernameInput.value
+                let url = `https://api.github.com/users/${username}/repos`
+
+                fetch(url)   // make request to URL
+                .then(response => response.json())  // extract the JSON from the response 
+                .then(githubJson => {   
+                    console.log(githubJson)  // JSON available here
+
+                    // Here we set a constant object for Languages.
+                    const Languages = {};
+
+                    // Loop for each "Repo" in githubJson - Fancy way of iterating through the JSON array.
+                    for (const Repo of githubJson) {
+                        // If the language is null, then it's not a programming language - this still counts.
+                        var language = Repo.language == null ? "No Language" : Repo.language;
+                        // If there are no keys, we should continue and add a key.
+                        if (Object.keys(Languages) != undefined) {
+                            // If we have keys, and it's a language we've come across before.
+                        if (Object.keys(Languages).includes(language))  {
+                            // Append the value.
+                            Languages[language]++;
+                            continue;
+                        }
+                    }   
+                        // Adding a new language key with a value of 1.
+                        Languages[language] = 1;
+                    }
+                    
+                    // Next we get the LanguageList element and set a variable for it.
+                    const pageList = document.getElementById("LanguageList");
+
+                    // Another fancy iteration of the List of Languages, this time the variable is "Language".
+                    for (const Language in Languages) {
+                    
+                    // Pull the number of repos using this language.
+                    const numRepos = Languages[Language];
+                    
+                    // Create a list item element.
+                    var listItem = document.createElement('li');
+                    // To which we add the value, Language name and the number of repos.
+                    listItem.appendChild(document.createTextNode(`${Language}: ${numRepos}`));
+
+                    // Then we set it to the LanguageList element.
+                    pageList.appendChild(listItem);
+                    }
+                    
+                    // Chunk of things here, first we make visible the LanguageDiv element, showcasing all the Languages used.
+                    
+                    document.getElementById("LanguageDiv").hidden = false;
+
+                    // Next we set the profile data, set the data and make it visible.
+
+                    document.getElementById("githubAvatar").src = githubJson[0].owner["avatar_url"];
+                    document.getElementById("githubAvatar").hidden = false;
+                    document.getElementById("githubUsername").innerHTML = githubJson[0].owner["login"];
+                    document.getElementById("githubLink").href = githubJson[0].owner["html_url"];
+                    document.getElementById("githubLink").hidden = false;
+
+                })
+                .catch(error => {    // handle errors that occur when requesting data or processing the response
+                    console.log(error)
+                    alert('Error fetching data from GitHub')
+                })
+            })
+
+        </script>
+    </body>
+</html>
